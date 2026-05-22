@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Заказать такси{% endblock %}
+
+{% block content %}
+<h2 style="text-align:center;">Заказать такси</h2>
+
+<p style="text-align:center;">
+    Пользователь: {{ request.user.first_name }} {{ request.user.last_name }}
+</p>
+
+<form id="orderForm">
+    <input id="from" placeholder="Откуда" required>
+    <input id="to" placeholder="Куда" required>
+    <input id="phone" placeholder="Номер телефона" required>
+    <textarea id="comment" placeholder="Комментарий (необязательно)"></textarea>
+    <button type="submit">Заказать</button>
+</form>
+
+<p id="result"></p>
+
+<p style="text-align:center;">
+    <a href="/logout/" class="logout-btn">Выйти</a>
+</p>
+
+<script>
+const form = document.getElementById("orderForm");
+const submitBtn = form.querySelector("button");
+
+function disableSubmit() {
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = "0.5";
+    submitBtn.style.cursor = "not-allowed";
+}
+
+function enableSubmit() {
+    submitBtn.disabled = false;
+    submitBtn.style.opacity = "1";
+    submitBtn.style.cursor = "pointer";
+}
+
+["from", "to", "phone", "comment"].forEach(id => {
+    document.getElementById(id).addEventListener("input", enableSubmit);
+});
+
+form.onsubmit = async (e) => {
+    e.preventDefault();
+
+    disableSubmit();
+
+    const data = {
+        name: "{{ request.user.first_name }} {{ request.user.last_name }}",
+        phone: document.getElementById("phone").value,
+        from_address: document.getElementById("from").value,
+        to_address: document.getElementById("to").value,
+        comment: document.getElementById("comment").value
+    };
+
+    const response = await fetch("/api/taxi/orders/", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    });
+
+    document.getElementById("result").innerText =
+        response.ok ? "Заказ отправлен!" : "Ошибка!";
+};
+</script>
+{% endblock %}

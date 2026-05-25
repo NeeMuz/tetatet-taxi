@@ -21,6 +21,9 @@ CSRF_TRUSTED_ORIGINS = [
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

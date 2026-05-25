@@ -17,18 +17,37 @@
     <button type="submit">Заказать</button>
 </form>
 
-<p id="result"></p>
-<p id="status"></p>
+<div id="orderInfo" style="
+    display:none;
+    margin-top:20px;
+    padding:15px;
+    border-radius:10px;
+    background:#1e1e1e;
+    color:white;
+    border:1px solid #444;
+">
+    <h3 style="margin-top:0;">Информация о заказе</h3>
 
-<p style="text-align:center;">
+    <p><b>ID заказа:</b> <span id="orderId"></span></p>
+    <p><b>Статус:</b> <span id="orderStatus"></span></p>
+    <p><b>Создан:</b> <span id="orderTime"></span></p>
+</div>
+
+<p style="text-align:center; margin-top:20px;">
     <a href="/logout/" class="logout-btn">Выйти</a>
 </p>
 
 <script>
 const form = document.getElementById("orderForm");
 const submitBtn = form.querySelector("button");
+
 const resultEl = document.getElementById("result");
 const statusEl = document.getElementById("status");
+
+const orderInfo = document.getElementById("orderInfo");
+const orderIdEl = document.getElementById("orderId");
+const orderStatusEl = document.getElementById("orderStatus");
+const orderTimeEl = document.getElementById("orderTime");
 
 function disableSubmit() {
     submitBtn.disabled = true;
@@ -48,7 +67,6 @@ function enableSubmit() {
 
 form.onsubmit = async (e) => {
     e.preventDefault();
-
     disableSubmit();
 
     const data = {
@@ -66,11 +84,15 @@ form.onsubmit = async (e) => {
     });
 
     if (response.ok) {
-        resultEl.innerText = "Заказ отправлен!";
-        statusEl.innerText = "Статус заказа: Новый";
+        const order = await response.json();
+
+        orderIdEl.innerText = order.id;
+        orderStatusEl.innerText = order.status;
+        orderTimeEl.innerText = new Date(order.created_at).toLocaleString();
+
+        orderInfo.style.display = "block";
     } else {
-        resultEl.innerText = "Ошибка!";
-        statusEl.innerText = "";
+        alert("Ошибка при создании заказа");
     }
 };
 
@@ -80,8 +102,9 @@ let socket = new WebSocket(wsScheme + "://" + window.location.host + "/ws/orders
 socket.onmessage = function(event) {
     try {
         const data = JSON.parse(event.data);
+
         if (data && data.status) {
-            statusEl.innerText = "Статус заказа: " + data.status;
+            orderStatusEl.innerText = data.status;
         }
     } catch (e) {
         console.log("WS parse error", e);

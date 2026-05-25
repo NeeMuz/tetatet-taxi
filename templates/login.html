@@ -3,14 +3,15 @@
 {% block title %}Вход{% endblock %}
 
 {% block content %}
-<h2>Вход</h2>
+<h2 style="text-align:center; margin-bottom: 25px;">Вход</h2>
 
 {% if error %}
-<p class="error">{{ error }}</p>
+<p class="error" style="text-align:center; margin-bottom: 15px;">{{ error }}</p>
 {% endif %}
 
-<form method="POST">
+<form method="POST" style="display:flex; flex-direction:column; gap:15px;">
     {% csrf_token %}
+
     <input name="email" type="email" placeholder="Email" required>
 
     <div class="password-wrapper">
@@ -21,7 +22,7 @@
     <button style="margin-top:10px;">Войти</button>
 </form>
 
-<p style="text-align:center; margin-top:10px;">
+<p style="text-align:center; margin-top:15px;">
     <a href="/forgot-password/">Забыли пароль?</a>
 </p>
 
@@ -32,7 +33,6 @@
 <style>
 .password-wrapper {
     position: relative;
-    margin-top: 10px;
 }
 
 .password-wrapper input {
@@ -42,7 +42,7 @@
 
 .show-password-btn {
     position: absolute;
-    right: 5px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
     padding: 6px 12px;
@@ -56,6 +56,27 @@
 
 .show-password-btn:hover {
     background: #584fe0;
+}
+
+input {
+    padding: 12px;
+    border-radius: 6px;
+    border: none;
+    font-size: 15px;
+}
+
+button {
+    padding: 12px;
+    border-radius: 6px;
+    border: none;
+    background: #f1c40f;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #d4ac0d;
 }
 </style>
 

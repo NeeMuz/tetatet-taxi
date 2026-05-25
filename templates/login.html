@@ -16,7 +16,7 @@
 
     <input id="password" name="password" type="password" placeholder="Пароль" required>
 
-    <button type="button" class="show-password-btn" onclick="togglePassword()">Показать</button>
+    <button type="button" class="show-password-btn" onclick="togglePassword()">Показать пароль</button>
 
     <button class="login-btn">Войти</button>
 </form>
@@ -73,10 +73,10 @@ function togglePassword() {
 
     if (input.type === "password") {
         input.type = "text";
-        btn.textContent = "Скрыть";
+        btn.textContent = "Скрыть пароль";
     } else {
         input.type = "password";
-        btn.textContent = "Показать";
+        btn.textContent = "Показать пароль";
     }
 }
 </script>

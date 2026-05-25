@@ -17,7 +17,7 @@
 
     <div class="password-wrapper">
         <input id="password" name="password" type="password" placeholder="Пароль" required>
-        <button type="button" class="show-password-btn" onclick="togglePassword()">👁 Показать</button>
+        <button type="button" class="show-password-btn" onclick="togglePassword()">Показать</button>
     </div>
 
     <button style="margin-top:10px;">Создать аккаунт</button>
@@ -30,20 +30,20 @@
 <style>
 .password-wrapper {
     position: relative;
-    display: flex;
-    align-items: center;
     margin-top: 10px;
 }
 
 .password-wrapper input {
-    flex: 1;
+    width: 100%;
     padding-right: 90px;
 }
 
 .show-password-btn {
     position: absolute;
     right: 5px;
-    padding: 6px 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 6px 12px;
     background: #6c63ff;
     color: white;
     border: none;
@@ -59,15 +59,15 @@
 
 <script>
 function togglePassword() {
-    const p = document.getElementById("password");
+    const input = document.getElementById("password");
     const btn = document.querySelector(".show-password-btn");
 
-    if (p.type === "password") {
-        p.type = "text";
-        btn.textContent = "🙈 Скрыть";
+    if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "Скрыть";
     } else {
-        p.type = "password";
-        btn.textContent = "👁 Показать";
+        input.type = "password";
+        btn.textContent = "Показать";
     }
 }
 </script>

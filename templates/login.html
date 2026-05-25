@@ -13,28 +13,65 @@
     {% csrf_token %}
     <input name="email" type="email" placeholder="Email" required>
 
-    <div style="margin-top:10px;">
+    <div class="password-wrapper">
         <input id="password" name="password" type="password" placeholder="Пароль" required>
-        <label style="display:block; margin-top:5px; font-size:14px;">
-            <input type="checkbox" onclick="togglePassword()"> Показать пароль
-        </label>
+        <button type="button" class="show-password-btn" onclick="togglePassword()">👁 Показать</button>
     </div>
 
     <button style="margin-top:10px;">Войти</button>
 </form>
 
 <p style="text-align:center; margin-top:10px;">
-    <a href="{% url 'password_reset' %}">Забыл пароль?</a>
+    <a href="/forgot-password/">Забыли пароль?</a>
 </p>
 
 <p style="text-align:center; margin-top:10px;">
     Нет аккаунта? <a href="/register/">Зарегистрироваться</a>
 </p>
 
+<style>
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.password-wrapper input {
+    flex: 1;
+    padding-right: 90px;
+}
+
+.show-password-btn {
+    position: absolute;
+    right: 5px;
+    padding: 6px 10px;
+    background: #6c63ff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.show-password-btn:hover {
+    background: #584fe0;
+}
+</style>
+
 <script>
 function togglePassword() {
     const p = document.getElementById("password");
-    p.type = p.type === "password" ? "text" : "password";
+    const btn = document.querySelector(".show-password-btn");
+
+    if (p.type === "password") {
+        p.type = "text";
+        btn.textContent = "🙈 Скрыть";
+    } else {
+        p.type = "password";
+        btn.textContent = "👁 Показать";
+    }
 }
 </script>
+
 {% endblock %}

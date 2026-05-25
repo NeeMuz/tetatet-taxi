@@ -18,6 +18,7 @@
 </form>
 
 <p id="result"></p>
+<p id="status"></p>
 
 <p style="text-align:center;">
     <a href="/logout/" class="logout-btn">Выйти</a>
@@ -26,6 +27,8 @@
 <script>
 const form = document.getElementById("orderForm");
 const submitBtn = form.querySelector("button");
+const resultEl = document.getElementById("result");
+const statusEl = document.getElementById("status");
 
 function disableSubmit() {
     submitBtn.disabled = true;
@@ -62,8 +65,27 @@ form.onsubmit = async (e) => {
         body: JSON.stringify(data)
     });
 
-    document.getElementById("result").innerText =
-        response.ok ? "Заказ отправлен!" : "Ошибка!";
+    if (response.ok) {
+        resultEl.innerText = "Заказ отправлен!";
+        statusEl.innerText = "Статус заказа: Новый";
+    } else {
+        resultEl.innerText = "Ошибка!";
+        statusEl.innerText = "";
+    }
+};
+
+let wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+let socket = new WebSocket(wsScheme + "://" + window.location.host + "/ws/orders/");
+
+socket.onmessage = function(event) {
+    try {
+        const data = JSON.parse(event.data);
+        if (data && data.status) {
+            statusEl.innerText = "Статус заказа: " + data.status;
+        }
+    } catch (e) {
+        console.log("WS parse error", e);
+    }
 };
 </script>
 {% endblock %}

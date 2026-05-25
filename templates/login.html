@@ -12,11 +12,29 @@
 <form method="POST">
     {% csrf_token %}
     <input name="email" type="email" placeholder="Email" required>
-    <input name="password" type="password" placeholder="Пароль" required>
-    <button>Войти</button>
+
+    <div style="margin-top:10px;">
+        <input id="password" name="password" type="password" placeholder="Пароль" required>
+        <label style="display:block; margin-top:5px; font-size:14px;">
+            <input type="checkbox" onclick="togglePassword()"> Показать пароль
+        </label>
+    </div>
+
+    <button style="margin-top:10px;">Войти</button>
 </form>
+
+<p style="text-align:center; margin-top:10px;">
+    <a href="{% url 'password_reset' %}">Забыл пароль?</a>
+</p>
 
 <p style="text-align:center; margin-top:10px;">
     Нет аккаунта? <a href="/register/">Зарегистрироваться</a>
 </p>
+
+<script>
+function togglePassword() {
+    const p = document.getElementById("password");
+    p.type = p.type === "password" ? "text" : "password";
+}
+</script>
 {% endblock %}

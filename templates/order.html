@@ -1,3 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Заказать такси{% endblock %}
+
+{% block content %}
+<h2 style="text-align:center;">Заказать такси</h2>
+
+<p style="text-align:center;">
+    Пользователь: {{ request.user.first_name }} {{ request.user.last_name }}
+</p>
+
+<form id="orderForm">
+    <input id="from" placeholder="Откуда" required>
+    <input id="to" placeholder="Куда" required>
+    <input id="phone" placeholder="Номер телефона" required>
+    <textarea id="comment" placeholder="Комментарий (необязательно)"></textarea>
+    <button type="submit">Заказать</button>
+</form>
+
+<div id="orderInfo" style="
+    display:none;
+    margin-top:20px;
+    padding:15px;
+    border-radius:10px;
+    background:#1e1e1e;
+    color:white;
+    border:1px solid #444;
+">
+    <h3 style="margin-top:0;">Информация о заказе</h3>
+
+    <p><b>ID заказа:</b> <span id="orderId"></span></p>
+    <p><b>Статус:</b> <span id="orderStatus"></span></p>
+    <p><b>Создан:</b> <span id="orderTime"></span></p>
+</div>
+
+<p style="text-align:center; margin-top:20px;">
+    <a href="/logout/" class="logout-btn">Выйти</a>
+</p>
+
 <script>
 const form = document.getElementById("orderForm");
 const submitBtn = form.querySelector("button");
@@ -94,3 +133,5 @@ socket.onmessage = function(event) {
     }
 };
 </script>
+
+{% endblock %}

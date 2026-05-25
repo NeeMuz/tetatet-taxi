@@ -41,9 +41,6 @@
 const form = document.getElementById("orderForm");
 const submitBtn = form.querySelector("button");
 
-const resultEl = document.getElementById("result");
-const statusEl = document.getElementById("status");
-
 const orderInfo = document.getElementById("orderInfo");
 const orderIdEl = document.getElementById("orderId");
 const orderStatusEl = document.getElementById("orderStatus");
@@ -93,6 +90,7 @@ form.onsubmit = async (e) => {
         orderInfo.style.display = "block";
     } else {
         alert("Ошибка при создании заказа");
+        enableSubmit();
     }
 };
 
@@ -102,7 +100,6 @@ let socket = new WebSocket(wsScheme + "://" + window.location.host + "/ws/orders
 socket.onmessage = function(event) {
     try {
         const data = JSON.parse(event.data);
-
         if (data && data.status) {
             orderStatusEl.innerText = data.status;
         }

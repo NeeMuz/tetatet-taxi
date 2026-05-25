@@ -1,1 +1,1 @@
-web: gunicorn tetatet.wsgi
+web: daphne -b 0.0.0.0 -p 8080 tetatet.asgi:application

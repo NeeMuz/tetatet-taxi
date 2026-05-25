@@ -14,12 +14,11 @@
 
     <input name="email" type="email" placeholder="Email" required>
 
-    <div class="password-wrapper">
-        <input id="password" name="password" type="password" placeholder="Пароль" required>
-        <button type="button" class="show-password-btn" onclick="togglePassword()">Показать</button>
-    </div>
+    <input id="password" name="password" type="password" placeholder="Пароль" required>
 
-    <button style="margin-top:10px;">Войти</button>
+    <button type="button" class="show-password-btn" onclick="togglePassword()">Показать</button>
+
+    <button class="login-btn">Войти</button>
 </form>
 
 <p style="text-align:center; margin-top:15px;">
@@ -31,33 +30,6 @@
 </p>
 
 <style>
-.password-wrapper {
-    position: relative;
-}
-
-.password-wrapper input {
-    width: 100%;
-    padding-right: 90px;
-}
-
-.show-password-btn {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 6px 12px;
-    background: #6c63ff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.show-password-btn:hover {
-    background: #584fe0;
-}
-
 input {
     padding: 12px;
     border-radius: 6px;
@@ -65,7 +37,21 @@ input {
     font-size: 15px;
 }
 
-button {
+.show-password-btn {
+    padding: 10px;
+    background: #6c63ff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.show-password-btn:hover {
+    background: #584fe0;
+}
+
+.login-btn {
     padding: 12px;
     border-radius: 6px;
     border: none;
@@ -75,7 +61,7 @@ button {
     font-weight: bold;
 }
 
-button:hover {
+.login-btn:hover {
     background: #d4ac0d;
 }
 </style>

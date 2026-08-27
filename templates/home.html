@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load site_i18n %}
+
+{% block title %}{% t "home.title" %} — Tetatet{% endblock %}
+{% block body_class %}page-home{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
+{% block layout %}
+{% t "common.passenger" as passenger_label %}
+<div class="home-app">
+    <section class="home-hero">
+        <div class="home-hero-top">
+            <div>
+                <p class="home-greeting" id="homeGreeting">{% t "home.greeting_default" %}</p>
+                <h1 class="home-title">{% tf "home.heading" name=request.user.first_name|default:passenger_label %}</h1>
+            </div>
+            <div class="home-live">
+                <span class="home-live-dot"></span>
+                {% t "common.online" %}
+            </div>
+        </div>
+
+        {% if active_order %}
+        {% status_label active_order.status as active_status %}
+        <a href="{% url 'order_track' active_order.pk %}" class="home-order-bar home-order-bar--active" id="homeOrderBar">
+            <span class="home-order-icon">🚕</span>
+            <span class="home-order-text">{% tf "home.active_trip" id=active_order.id status=active_status %}</span>
+            <span class="home-order-go">{% t "common.open" %}</span>
+        </a>
+        {% else %}
+        <a href="{% url 'order' %}" class="home-order-bar" id="homeOrderBar">
+            <span class="home-order-icon">📍</span>
+            <span class="home-order-text">{% t "home.where_to" %}</span>
+            <span class="home-order-go">{% t "common.order" %}</span>
+        </a>
+        {% endif %}
+
+        {% if needs_phone %}
+        <div class="home-alert">
+            {% t "home.phone_alert" %}
+            <a href="{% url 'profile' %}">{% t "common.profile_link" %}</a>
+        </div>
+        {% endif %}
+
+        <div class="home-quick-dest" id="homeQuickDest">
+            <button type="button" class="home-dest-chip" data-to="Alexanderplatz, Berlin">Alexanderplatz</button>
+            <button type="button" class="home-dest-chip" data-to="Flughafen Berlin BER">{% t "home.chip.airport" %}</button>
+            <button type="button" class="home-dest-chip" data-to="Hauptbahnhof, Berlin">{% t "home.chip.station" %}</button>
+            <button type="button" class="home-dest-chip" data-to="Potsdamer Platz, Berlin">Potsdamer Platz</button>
+        </div>
+    </section>
+
+    <section class="home-stats" id="homeStats">
+        <div class="home-stat-card">
+            <strong data-count="{{ done_count }}">0</strong>
+            <span>{% t "home.stat_done" %}</span>
+        </div>
+        <div class="home-stat-card">
+            <strong data-count="{{ total_km }}" data-decimals="1">0</strong>
+            <span>{% t "home.stat_km" %}</span>
+        </div>
+        <div class="home-stat-card">
+            <strong>{{ active_orders.count }}</strong>
+            <span>{% t "home.stat_active" %}</span>
+        </div>
+    </section>
+
+    {% if active_orders %}
+    <section class="home-section">
+        <h2 class="home-section-title">{% t "home.section_active" %}</h2>
+        <div class="home-active-list">
+            {% for order in active_orders %}
+            <a href="{% url 'order_track' order.pk %}" class="home-active-card home-active-card--{{ order.status }}">
+                <div class="home-active-top">
+                    <span class="home-active-id">#{{ order.id }}</span>
+                    <span class="home-active-status">{% status_label order.status %}</span>
+                </div>
+                <p class="home-active-route">{{ order.from_address|truncatechars:28 }} → {{ order.to_address|truncatechars:28 }}</p>
+                <div class="home-active-bottom">
+                    <span>{% tariff_label order.tariff %}</span>
+                    <span>{{ order.estimated_price }} USD</span>
+                </div>
+                <div class="home-active-progress home-active-progress--5">
+                    <span class="{% if order.status != 'new' %}done{% else %}current{% endif %}"></span>
+                    <span class="{% if order.status == 'accepted' %}current{% elif order.status != 'new' %}done{% endif %}"></span>
+                    <span class="{% if order.status == 'arrived' %}current{% elif order.status == 'on_way' or order.status == 'done' %}done{% endif %}"></span>
+                    <span class="{% if order.status == 'on_way' %}current{% elif order.status == 'done' %}done{% endif %}"></span>
+                    <span class="{% if order.status == 'done' %}done current{% endif %}"></span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="home-section home-rating-section">
+        <div class="home-rating-row">
+            <div class="home-rating-card">
+                <div class="home-rating-avatar">
+                    {% if request.user.avatar %}
+                    <img src="{{ request.user.avatar.url }}" alt="">
+                    {% else %}
+                    {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                    {% endif %}
+                </div>
+                <div class="home-rating-body">
+                    <span class="home-rating-label">{% t "home.rating_label" %}</span>
+                    <div class="rating-line">
+                        <span class="rating-num">{{ passenger_rating }}</span>
+                        <span class="star-display" data-rating="{{ passenger_rating }}"></span>
+                    </div>
+                    <span class="home-rating-meta">{% t "home.rating_meta" %}</span>
+                </div>
+            </div>
+
+            {% if active_order and active_driver.name %}
+            <div class="home-driver-card">
+                <div class="home-driver-avatar">{{ active_driver.name|first|upper }}</div>
+                <div class="home-driver-body">
+                    <span class="home-rating-label">{% t "home.driver_label" %}</span>
+                    <strong class="home-driver-name">{{ active_driver.name }}</strong>
+                    <div class="rating-line">
+                        <span class="rating-num">{{ active_driver.rating }}</span>
+                        <span class="star-display" data-rating="{{ active_driver.rating }}"></span>
+                    </div>
+                    <span class="home-rating-meta">{{ active_driver.car }} · {{ active_driver.plate }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if recent_orders %}
+    <section class="home-section">
+        <div class="home-section-head">
+            <h2 class="home-section-title">{% t "home.section_recent" %}</h2>
+            <a href="{% url 'order_history' %}" class="home-link">{% t "home.all_history" %}</a>
+        </div>
+        <div class="home-recent-list">
+            {% for order in recent_orders %}
+            <a href="{% url 'order_track' order.pk %}" class="home-recent-card">
+                <div class="home-recent-top">
+                    <span>#{{ order.id }} · {% tariff_label order.tariff %}</span>
+                    <span class="badge badge-{{ order.status }}">{% status_label order.status %}</span>
+                </div>
+                <p>{{ order.from_address|truncatechars:32 }} → {{ order.to_address|truncatechars:32 }}</p>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="home-map-section">
+        <h2 class="home-section-title">{% t "home.section_map" %}</h2>
+        <div class="home-map-wrap">
+            <div id="homeMap"></div>
+            <a href="{% url 'order' %}" class="home-map-cta btn btn-accent">{% t "home.map_cta" %}</a>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/leaflet-ride-map.js' %}?v=4"></script>
+<script src="{% static 'js/home.js' %}?v=3"></script>
+{% endblock %}

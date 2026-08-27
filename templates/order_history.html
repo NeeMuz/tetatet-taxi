@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load site_i18n %}
+
+{% block title %}{% t "history.title" %} — Tetatet{% endblock %}
+
+{% block layout %}
+<div class="page-trips">
+    <div class="page-head">
+        <h1>{% t "history.title" %}</h1>
+        <p>{% tf "history.sub" count=orders|length %}</p>
+    </div>
+
+    {% if active_orders %}
+    <div class="active-orders-banner">
+        <strong>{% t "history.active_title" %}</strong>
+        <div class="active-orders-list">
+            {% for order in active_orders %}
+            <a href="{% url 'order_track' order.id %}" class="active-order-link">
+                №{{ order.id }} · {% status_label order.status %} · {{ order.from_address|truncatechars:28 }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if orders %}
+    <div class="trip-list">
+        {% for order in orders %}
+        <a href="{% url 'order_track' order.id %}" class="trip-card trip-card-link">
+            <div class="trip-top">
+                <span class="trip-id">#{{ order.id }} · {% tariff_label order.tariff %}</span>
+                <span class="trip-date">{{ order.created_at|date:"d M Y, H:i" }}</span>
+            </div>
+            <div class="trip-route">
+                <div class="r-from">{{ order.from_address }}</div>
+                <div class="r-to">{{ order.to_address }}</div>
+            </div>
+            <div class="trip-bottom">
+                <span class="trip-price">{{ order.estimated_price }} $</span>
+                <span class="badge badge-{{ order.status }}">{% status_label order.status %}</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+        <div class="empty-icon">🚕</div>
+        <h3>{% t "history.empty_title" %}</h3>
+        <p>{% t "history.empty_sub" %}</p>
+        <a href="{% url 'order' %}" class="btn btn-accent" style="margin-top:24px; display:inline-flex;">{% t "history.book" %}</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

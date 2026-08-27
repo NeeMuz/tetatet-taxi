@@ -1,0 +1,148 @@
+{% extends 'dispatcher_base.html' %}
+{% load static %}
+{% load site_i18n %}
+
+{% block title %}{% t "dispatch.badge" %} — Tetatet{% endblock %}
+
+{% block layout %}
+<div class="dispatch-app">
+    <div class="dispatch-toolbar">
+        <div>
+            <h1>{% t "dispatch.panel_title" %}</h1>
+            <p>{% t "dispatch.panel_sub" %} <strong id="totalOrders">{{ orders|length }}</strong> · {% t "dispatch.sync" %}</p>
+        </div>
+        <div class="dispatch-toolbar-actions">
+            <input type="search" id="dispatchSearch" class="dispatch-search" placeholder="{% t 'dispatch.search' %}">
+            <button type="button" class="btn-dispatch-tool" id="dispatchRefresh">↻ {% t "dispatch.refresh" %}</button>
+        </div>
+    </div>
+
+    <div id="dispatchError" class="dispatch-error" style="display:none;"></div>
+
+    <div class="dispatch-stats">
+        <div class="dispatch-stat dispatch-stat-new">
+            <span class="dispatch-stat-num" id="statNew">{{ counts.new }}</span>
+            <span class="dispatch-stat-lbl">{% t "dispatch.stat.new" %}</span>
+        </div>
+        <div class="dispatch-stat dispatch-stat-active">
+            <span class="dispatch-stat-num" id="statAccepted">{{ counts.accepted }}</span>
+            <span class="dispatch-stat-lbl">{% t "dispatch.stat.accepted" %}</span>
+        </div>
+        <div class="dispatch-stat dispatch-stat-arrived">
+            <span class="dispatch-stat-num" id="statArrived">{{ counts.arrived }}</span>
+            <span class="dispatch-stat-lbl">{% t "dispatch.stat.arrived" %}</span>
+        </div>
+        <div class="dispatch-stat dispatch-stat-way">
+            <span class="dispatch-stat-num" id="statOnWay">{{ counts.on_way }}</span>
+            <span class="dispatch-stat-lbl">{% t "dispatch.stat.on_way" %}</span>
+        </div>
+        <div class="dispatch-stat dispatch-stat-done">
+            <span class="dispatch-stat-num" id="statDone">{{ counts.done }}</span>
+            <span class="dispatch-stat-lbl">{% t "dispatch.stat.done" %}</span>
+        </div>
+        <div class="dispatch-stat dispatch-stat-cancelled">
+            <span class="dispatch-stat-num" id="statCancelled">{{ counts.cancelled }}</span>
+            <span class="dispatch-stat-lbl">{% t "dispatch.stat.cancelled" %}</span>
+        </div>
+    </div>
+
+    <div class="dispatch-board" id="dispatchBoard">
+        <section class="dispatch-col" data-col="new">
+            <div class="dispatch-col-head">
+                <h3>{% t "dispatch.col.new" %}</h3>
+                <span class="col-count" data-count="new">{{ counts.new }}</span>
+            </div>
+            <div class="dispatch-cards" id="colNew">
+                {% for order in orders %}
+                {% if order.status == 'new' %}
+                {% include 'includes/dispatch_order_card.html' %}
+                {% endif %}
+                {% empty %}
+                {% endfor %}
+                {% if counts.new == 0 %}<p class="dispatch-empty">{% t "dispatch.empty" %}</p>{% endif %}
+            </div>
+        </section>
+
+        <section class="dispatch-col" data-col="accepted">
+            <div class="dispatch-col-head">
+                <h3>{% t "dispatch.col.accepted" %}</h3>
+                <span class="col-count" data-count="accepted">{{ counts.accepted }}</span>
+            </div>
+            <div class="dispatch-cards" id="colAccepted">
+                {% for order in orders %}
+                {% if order.status == 'accepted' %}
+                {% include 'includes/dispatch_order_card.html' %}
+                {% endif %}
+                {% endfor %}
+                {% if counts.accepted == 0 %}<p class="dispatch-empty">{% t "dispatch.empty" %}</p>{% endif %}
+            </div>
+        </section>
+
+        <section class="dispatch-col" data-col="arrived">
+            <div class="dispatch-col-head">
+                <h3>{% t "dispatch.col.arrived" %}</h3>
+                <span class="col-count" data-count="arrived">{{ counts.arrived }}</span>
+            </div>
+            <div class="dispatch-cards" id="colArrived">
+                {% for order in orders %}
+                {% if order.status == 'arrived' %}
+                {% include 'includes/dispatch_order_card.html' %}
+                {% endif %}
+                {% endfor %}
+                {% if counts.arrived == 0 %}<p class="dispatch-empty">{% t "dispatch.empty" %}</p>{% endif %}
+            </div>
+        </section>
+
+        <section class="dispatch-col" data-col="on_way">
+            <div class="dispatch-col-head">
+                <h3>{% t "dispatch.col.on_way" %}</h3>
+                <span class="col-count" data-count="on_way">{{ counts.on_way }}</span>
+            </div>
+            <div class="dispatch-cards" id="colOnWay">
+                {% for order in orders %}
+                {% if order.status == 'on_way' %}
+                {% include 'includes/dispatch_order_card.html' %}
+                {% endif %}
+                {% endfor %}
+                {% if counts.on_way == 0 %}<p class="dispatch-empty">{% t "dispatch.empty" %}</p>{% endif %}
+            </div>
+        </section>
+
+        <section class="dispatch-col" data-col="done">
+            <div class="dispatch-col-head">
+                <h3>{% t "dispatch.col.done" %}</h3>
+                <span class="col-count" data-count="done">{{ counts.done }}</span>
+            </div>
+            <div class="dispatch-cards" id="colDone">
+                {% for order in orders %}
+                {% if order.status == 'done' %}
+                {% include 'includes/dispatch_order_card.html' %}
+                {% endif %}
+                {% endfor %}
+                {% if counts.done == 0 %}<p class="dispatch-empty">{% t "dispatch.empty" %}</p>{% endif %}
+            </div>
+        </section>
+
+        <section class="dispatch-col dispatch-col-cancelled" data-col="cancelled">
+            <div class="dispatch-col-head">
+                <h3>{% t "dispatch.col.cancelled" %}</h3>
+                <span class="col-count" data-count="cancelled">{{ counts.cancelled }}</span>
+            </div>
+            <div class="dispatch-cards" id="colCancelled">
+                {% for order in orders %}
+                {% if order.status == 'cancelled' %}
+                {% include 'includes/dispatch_order_card.html' %}
+                {% endif %}
+                {% endfor %}
+                {% if counts.cancelled == 0 %}<p class="dispatch-empty">{% t "dispatch.empty" %}</p>{% endif %}
+            </div>
+        </section>
+    </div>
+</div>
+
+{{ dispatch_config|json_script:"dispatchData" }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/dispatcher.js' %}?v=10"></script>
+{% endblock %}

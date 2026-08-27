@@ -1,0 +1,45 @@
+{% load site_i18n %}
+<div class="dispatch-card {% if order.status == 'new' %}is-new{% endif %}" data-order-id="{{ order.id }}" data-status="{{ order.status }}">
+    <div class="dispatch-card-top">
+        <strong>#{{ order.id }}</strong>
+        <span>{{ order.created_at|date:"d.m H:i" }}</span>
+    </div>
+    <div class="dispatch-card-route">
+        <div class="r-from">{{ order.from_address }}</div>
+        <div class="r-to">{{ order.to_address }}</div>
+    </div>
+    <div class="dispatch-card-meta">
+        {% if order.status == 'accepted' or order.status == 'arrived' or order.status == 'on_way' %}
+        <span>🚕 {{ order.driver_name|default:"—" }}</span>
+        {% else %}
+        <span>{{ order.name }} · {% tariff_label order.tariff %}</span>
+        {% endif %}
+        <a href="tel:{{ order.phone }}" class="dispatch-phone">{{ order.phone }}</a>
+    </div>
+    <div class="dispatch-card-price-row">${{ order.estimated_price }}</div>
+
+    {% if order.status == 'new' %}
+    <div class="dispatch-actions">
+        <select class="driver-select" data-for="{{ order.id }}">
+            <option value="">{% t "dispatch.btn.select_driver" %}</option>
+            {% for d in drivers %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+        </select>
+        <button type="button" class="btn-dispatch btn-dispatch-accept" data-action="accept" data-id="{{ order.id }}">{% t "dispatch.btn.assign" %}</button>
+        <button type="button" class="btn-dispatch btn-dispatch-cancel" data-action="cancel" data-id="{{ order.id }}">{% t "dispatch.btn.reject" %}</button>
+    </div>
+    {% elif order.status == 'accepted' %}
+    <div class="dispatch-actions">
+        <button type="button" class="btn-dispatch btn-dispatch-go" data-action="arrived" data-id="{{ order.id }}">{% t "dispatch.btn.arrived" %}</button>
+        <button type="button" class="btn-dispatch btn-dispatch-cancel" data-action="cancel" data-id="{{ order.id }}">{% t "dispatch.btn.cancel" %}</button>
+    </div>
+    {% elif order.status == 'arrived' %}
+    <div class="dispatch-actions">
+        <button type="button" class="btn-dispatch btn-dispatch-go" data-action="on_way" data-id="{{ order.id }}">{% t "dispatch.btn.start_trip" %}</button>
+        <button type="button" class="btn-dispatch btn-dispatch-cancel" data-action="cancel" data-id="{{ order.id }}">{% t "dispatch.btn.cancel" %}</button>
+    </div>
+    {% elif order.status == 'on_way' %}
+    <div class="dispatch-actions">
+        <button type="button" class="btn-dispatch btn-dispatch-done" data-action="done" data-id="{{ order.id }}">{% t "dispatch.btn.complete" %}</button>
+    </div>
+    {% endif %}
+</div>

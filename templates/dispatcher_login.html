@@ -1,0 +1,46 @@
+{% extends 'dispatcher_base.html' %}
+{% load static %}
+{% load site_i18n %}
+
+{% block title %}{% t "dispatch.login.title" %} — Tetatet{% endblock %}
+
+{% block layout %}
+<div class="dispatch-login-page">
+    <div class="dispatch-login-card">
+        <div class="dispatch-login-head">
+            <span class="dispatch-logo">Tetatet</span>
+            <h1>{% t "dispatch.login.title" %}</h1>
+            <p>{% t "dispatch.login.sub" %}</p>
+        </div>
+
+        <div class="dispatch-login-lang">
+            {% include 'includes/language_switcher.html' with full=True %}
+        </div>
+
+        {% if error %}
+        <div class="alert-error">{{ error }}</div>
+        {% endif %}
+        {% if info %}
+        <div class="alert-info">{{ info }}</div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="field">
+                <label class="field-label">{% t "common.email" %}</label>
+                <input class="field-input" name="email" type="email" placeholder="dispatcher@tetatet.de" required autofocus>
+            </div>
+            <div class="field">
+                <label class="field-label">{% t "common.password" %}</label>
+                <input class="field-input" id="dispatchPassword" name="password" type="password" placeholder="••••••••" required>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm btn-block" onclick="togglePassword('dispatchPassword', this)">{% t "common.show" %}</button>
+            <button type="submit" class="btn btn-accent btn-block" style="margin-top:16px;">{% t "dispatch.login.submit" %}</button>
+        </form>
+
+        <p class="dispatch-login-footer">
+            {% t "dispatch.login.passenger" %} <a href="{% url 'login' %}">{% t "dispatch.login.passenger_link" %}</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

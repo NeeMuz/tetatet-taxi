@@ -1,5 +1,9 @@
 from rest_framework.permissions import BasePermission
 
-class IsAdmin(BasePermission):
+
+class IsDispatcherUser(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_staff
+        return (
+            request.user.is_authenticated
+            and request.user.can_dispatch
+        )

@@ -1,0 +1,36 @@
+{% load site_i18n %}
+<div class="lang-dropdown{% if compact %} lang-dropdown--compact{% endif %}{% if full %} lang-dropdown--full{% endif %}" data-lang-dropdown>
+    <form action="{% url 'set_language' %}" method="post" class="lang-dropdown-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="button" class="lang-dropdown-trigger" aria-expanded="false" aria-haspopup="listbox" aria-label="{% t 'lang.title' %}">
+            <svg class="lang-dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span class="lang-dropdown-current">
+                {% if CURRENT_LANGUAGE == 'uk' %}{% t 'lang.uk_short' %}{% elif CURRENT_LANGUAGE == 'en' %}{% t 'lang.en_short' %}{% else %}{% t 'lang.ru_short' %}{% endif %}
+            </span>
+            <svg class="lang-dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"/>
+            </svg>
+        </button>
+        <div class="lang-dropdown-menu" role="listbox" hidden>
+            {% for code, label in LANGUAGES %}
+            <button type="button" name="language" value="{{ code }}"
+                class="lang-dropdown-item{% if code == CURRENT_LANGUAGE %} is-active{% endif %}"
+                role="option" aria-selected="{% if code == CURRENT_LANGUAGE %}true{% else %}false{% endif %}">
+                <span class="lang-dropdown-item-code">
+                    {% if code == 'uk' %}{% t 'lang.uk_short' %}{% elif code == 'en' %}{% t 'lang.en_short' %}{% else %}{% t 'lang.ru_short' %}{% endif %}
+                </span>
+                <span class="lang-dropdown-item-label">{{ label }}</span>
+                {% if code == CURRENT_LANGUAGE %}
+                <svg class="lang-dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                {% endif %}
+            </button>
+            {% endfor %}
+        </div>
+    </form>
+</div>

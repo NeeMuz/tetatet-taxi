@@ -1,0 +1,88 @@
+{% load static %}
+{% load site_i18n %}
+
+<!DOCTYPE html>
+
+<html lang="{{ CURRENT_LANGUAGE }}">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}{% t "dispatch.badge" %} — Tetatet{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=45">
+
+    {% block extra_head %}{% endblock %}
+
+</head>
+
+<body class="dispatch-body">
+
+<canvas id="particlesBg" class="particles-bg" aria-hidden="true"></canvas>
+
+
+
+{% if user.is_authenticated %}
+
+<header class="dispatch-header">
+
+    <div class="dispatch-header-inner">
+
+        <div class="dispatch-brand">
+
+            <span class="dispatch-logo">Tetatet</span>
+
+            <span class="dispatch-badge">{% t "dispatch.badge" %}</span>
+
+        </div>
+
+        <div class="dispatch-header-right">
+
+            <span class="dispatch-live" id="dispatchLive">
+
+                <span class="dispatch-live-dot"></span> {% t "dispatch.online" %}
+
+            </span>
+
+            {% include 'includes/language_switcher.html' with compact=True %}
+
+            <span class="dispatch-user">{{ user.first_name|default:user.email }}</span>
+
+            <a href="{% url 'logout' %}?from=dispatcher" class="btn-dispatch-logout">{% t "nav.logout" %}</a>
+
+        </div>
+
+    </div>
+
+</header>
+
+{% endif %}
+
+
+
+{% block layout %}{% endblock %}
+
+
+
+{% csrf_token %}
+
+{% include 'includes/i18n_bootstrap.html' %}
+
+<script src="{% static 'js/lang-switcher.js' %}?v=5"></script>
+
+<script src="{% static 'js/particles-bg.js' %}?v=3"></script>
+
+<script src="{% static 'js/tetatet.js' %}?v=15"></script>
+
+{% block extra_scripts %}{% endblock %}
+
+</body>
+
+</html>

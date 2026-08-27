@@ -1,18 +1,113 @@
 {% load static %}
+{% load site_i18n %}
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ CURRENT_LANGUAGE }}">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Tetatet Taxi{% endblock %}</title>
-
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tetatet{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=45">
+    {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
+<canvas id="particlesBg" class="particles-bg" aria-hidden="true"></canvas>
 
-<div class="container">
-    {% block content %}
-    {% endblock %}
-</div>
+<header class="header {% block header_class %}{% endblock %}">
+    <div class="header-inner">
+        {% if user.is_authenticated %}
+        <a href="{% url 'home' %}" class="brand">Tetatet</a>
+        {% else %}
+        <a href="{% url 'landing' %}" class="brand">Tetatet</a>
+        {% endif %}
 
+        {% if user.is_authenticated %}
+        <nav class="header-nav header-nav--dock" data-header-nav aria-label="{% t 'nav.main' %}">
+            <div class="header-nav-track">
+                <span class="header-nav-glider" aria-hidden="true"></span>
+                <a href="{% url 'home' %}" class="header-nav-item{% if request.path == '/home/' or request.path == '/' and user.is_authenticated %} is-active{% endif %}">
+                    <svg class="header-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"/>
+                    </svg>
+                    <span class="header-nav-label">{% t "nav.home" %}</span>
+                </a>
+                <a href="{% url 'order' %}" class="header-nav-item{% if request.path == '/order/' %} is-active{% endif %}">
+                    <svg class="header-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9L2 12v4c0 .6.4 1 1 1h2"/>
+                        <circle cx="7" cy="17" r="2"/>
+                        <circle cx="17" cy="17" r="2"/>
+                    </svg>
+                    <span class="header-nav-label">{% t "nav.orders" %}</span>
+                </a>
+                <a href="{% url 'order_history' %}" class="header-nav-item{% if request.path == '/orders/' or request.path|slice:':8' == '/orders/' %} is-active{% endif %}">
+                    <svg class="header-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9"/>
+                        <path d="M12 7v5l3 2"/>
+                    </svg>
+                    <span class="header-nav-label">{% t "nav.history" %}</span>
+                </a>
+            </div>
+        </nav>
+        <div class="header-user">
+            <a href="{% url 'profile' %}" class="user-avatar{% if request.path|slice:':9' == '/profile/' %} is-active{% endif %}" title="{% t 'nav.profile' %}">
+                {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" alt="" class="user-avatar-img">
+                {% else %}
+                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                {% endif %}
+            </a>
+            <a href="{% url 'logout' %}" class="btn-logout" title="{% t 'nav.logout' %}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span class="btn-logout-text">{% t "nav.logout" %}</span>
+            </a>
+        </div>
+        {% else %}
+        <nav class="header-nav header-nav--guest" aria-label="{% t 'nav.main' %}">
+            {% include 'includes/language_switcher.html' with compact=True %}
+            <div class="header-nav-dock" data-header-nav>
+                <div class="header-nav-track">
+                    <span class="header-nav-glider" aria-hidden="true"></span>
+                    <a href="{% url 'landing' %}" class="header-nav-item{% if request.path == '/' %} is-active{% endif %}">
+                        <svg class="header-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"/>
+                        </svg>
+                        <span class="header-nav-label">{% t "nav.home" %}</span>
+                    </a>
+                    <a href="{% url 'login' %}" class="header-nav-item{% if request.path == '/login/' %} is-active{% endif %}">
+                        <svg class="header-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                            <polyline points="10 17 15 12 10 7"/>
+                            <line x1="15" y1="12" x2="3" y2="12"/>
+                        </svg>
+                        <span class="header-nav-label">{% t "nav.login" %}</span>
+                    </a>
+                    <a href="{% url 'register' %}" class="header-nav-item{% if request.path == '/register/' %} is-active{% endif %}">
+                        <svg class="header-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <line x1="19" y1="8" x2="19" y2="14"/>
+                            <line x1="22" y1="11" x2="16" y2="11"/>
+                        </svg>
+                        <span class="header-nav-label">{% t "nav.register" %}</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+</header>
+
+{% block layout %}{% endblock %}
+
+{% include 'includes/i18n_bootstrap.html' %}
+<script src="{% static 'js/lang-switcher.js' %}?v=5"></script>
+<script src="{% static 'js/particles-bg.js' %}?v=3"></script>
+<script src="{% static 'js/tetatet.js' %}?v=20"></script>
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>

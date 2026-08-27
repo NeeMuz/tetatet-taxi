@@ -1,137 +1,388 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load site_i18n %}
 
-{% block title %}Заказать такси{% endblock %}
+{% block title %}{% t "order.title" %} — Tetatet{% endblock %}
+{% block body_class %}page-uber{% endblock %}
 
-{% block content %}
-<h2 style="text-align:center;">Заказать такси</h2>
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
 
-<p style="text-align:center;">
-    Пользователь: {{ request.user.first_name }} {{ request.user.last_name }}
-</p>
+{% block layout %}
+<div class="uber-app uber-app--wide-center" id="uberApp">
+    <aside class="uber-panel uber-panel-left">
+        <div class="uber-panel-scroll">
+            <h2 class="uber-heading">{% t "order.heading" %}</h2>
 
-<form id="orderForm">
-    <input id="from" placeholder="Откуда" required>
-    <input id="to" placeholder="Куда" required>
-    <input id="phone" placeholder="Номер телефона" required>
-    <textarea id="comment" placeholder="Комментарий (необязательно)"></textarea>
-    <button type="submit">Заказать</button>
-</form>
+            {% if needs_phone %}
+            <div class="phone-warning">
+                <strong>{% t "order.phone_warning_title" %}</strong>
+                <p>{% t "order.phone_warning_text" %}</p>
+            </div>
+            {% endif %}
 
-<div id="orderInfo" style="
-    display:none;
-    margin-top:20px;
-    padding:15px;
-    border-radius:10px;
-    background:#1e1e1e;
-    color:white;
-    border:1px solid #444;
-">
-    <h3 style="margin-top:0;">Информация о заказе</h3>
+            <div class="uber-field-group">
+                <div class="uber-field uber-field-from" id="fieldFrom">
+                    <span class="uber-field-icon">○</span>
+                    <input id="from" type="text" placeholder="{% t 'order.from' %}" autocomplete="off" value="{{ prefill_from }}">
+                </div>
+                <div class="uber-field uber-field-to" id="fieldTo">
+                    <span class="uber-field-icon">□</span>
+                    <input id="to" type="text" placeholder="{% t 'order.to' %}" autocomplete="off" value="{{ prefill_to }}">
+                </div>
+                <button type="button" class="uber-swap" id="swapBtn" title="{% t 'order.swap' %}">⇅</button>
+            </div>
 
-    <p><b>ID заказа:</b> <span id="orderId"></span></p>
-    <p><b>Статус:</b> <span id="orderStatus"></span></p>
-    <p><b>Создан:</b> <span id="orderTime"></span></p>
+            <button type="button" class="uber-locate-btn" id="panelLocateBtn" title="{% t 'order.my_location' %}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+                </svg>
+                {% t "order.my_location" %}
+            </button>
+
+            <div class="route-summary" id="routeBar">
+                <div class="route-summary-row">
+                    <div class="route-summary-stat">
+                        <span class="route-summary-value" id="routeEta">{% t "common.dash" %}</span>
+                        <span class="route-summary-label">{% t "order.min_suffix" %}</span>
+                    </div>
+                    <div class="route-summary-stat">
+                        <span class="route-summary-value" id="routeDist">{% t "common.dash" %}</span>
+                        <span class="route-summary-label">{% t "order.km_suffix" %}</span>
+                    </div>
+                </div>
+                <div class="route-summary-footer">
+                    <span class="route-summary-tariff" id="routeTariffLabel">{% t "order.select_tariff" %}</span>
+                    <span class="route-summary-price" id="routePrice">{% t "common.dash" %}</span>
+                </div>
+            </div>
+            <p class="map-click-hint" id="mapClickHint" hidden aria-hidden="true"></p>
+        </div>
+    </aside>
+
+    <section class="uber-panel uber-panel-center" id="centerPanel">
+        <h3 class="uber-subheading">{% t "order.choose_ride" %}</h3>
+        <div class="uber-rides-scroll" id="ridesList">
+            <div class="uber-rides-group">
+                <div class="uber-rides-label">{% t "order.standard" %}</div>
+                {% for key, info in tariff_catalog.items %}
+                {% if info.category == 'standard' %}
+                <div class="uber-ride{% if key == prefill_tariff %} selected{% endif %}" data-tariff="{{ key }}">
+                    <div class="uber-ride-icon">{{ info.icon }}</div>
+                    <div class="uber-ride-info">
+                        <div class="uber-ride-name">{{ info.display }}</div>
+                        <div class="uber-ride-meta"><span class="eta-slot" data-tariff="{{ key }}">{% t "common.dash" %}</span> · {{ info.meta }}</div>
+                        <div class="uber-ride-car">🚘 {{ info.example_car }}</div>
+                    </div>
+                    <div class="uber-ride-price price-slot" id="price-{{ key }}">{% t "common.dash" %}</div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div class="uber-rides-group">
+                <div class="uber-rides-label">{% t "order.special" %}</div>
+                {% for key, info in tariff_catalog.items %}
+                {% if info.category == 'special' %}
+                <div class="uber-ride{% if key == prefill_tariff %} selected{% endif %}" data-tariff="{{ key }}">
+                    <div class="uber-ride-icon">{{ info.icon }}</div>
+                    <div class="uber-ride-info">
+                        <div class="uber-ride-name">{{ info.display }}</div>
+                        <div class="uber-ride-meta"><span class="eta-slot" data-tariff="{{ key }}">{% t "common.dash" %}</span> · {{ info.meta }}</div>
+                        <div class="uber-ride-car">🚘 {{ info.example_car }}</div>
+                    </div>
+                    <div class="uber-ride-price price-slot" id="price-{{ key }}">{% t "common.dash" %}</div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="uber-footer uber-footer-center">
+            <div class="payment-picker" id="paymentPicker">
+                <div class="payment-picker-label">{% t "order.payment" %}</div>
+                <div class="pay-select" id="paySelect">
+                    <button type="button" class="pay-select-btn" id="paySelectBtn" aria-expanded="false" aria-haspopup="listbox">
+                        <span class="pay-select-icon" id="paySelectIcon">💵</span>
+                        <span class="pay-select-text" id="paySelectText">{% t "order.cash" %}</span>
+                        <span class="pay-select-chevron" aria-hidden="true">▾</span>
+                    </button>
+                    <div class="pay-select-menu" id="paySelectMenu" role="listbox" hidden>
+                        <button type="button" class="pay-select-item is-active" data-pay="cash" role="option">
+                            <span>💵</span> {% t "order.cash" %}
+                        </button>
+                        <button type="button" class="pay-select-item" data-pay="card" role="option">
+                            <span>💳</span> {% t "order.card" %}
+                        </button>
+                    </div>
+                    <input type="hidden" id="payTypeInput" value="cash">
+                </div>
+                <div class="pay-card-block" id="payCardBlock" hidden>
+                    {% if payment_cards %}
+                    <select class="payment-card-select" id="cardSelect">
+                        {% for card in payment_cards %}
+                        <option value="{{ card.id }}"{% if card.is_default %} selected{% endif %}>{{ card.display_label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+                    <p class="pay-card-empty">{% t "order.no_cards" %} <a href="{% url 'profile' %}">{% t "order.add_card_link" %}</a></p>
+                    {% endif %}
+                </div>
+            </div>
+            <button type="button" class="btn btn-uber-order" id="submitBtn" disabled>{% t "order.specify_route" %}</button>
+        </div>
+    </section>
+
+    <div class="uber-map-wrap">
+        <div id="rideMap"></div>
+    </div>
 </div>
+{% endblock %}
 
-<p style="text-align:center; margin-top:20px;">
-    <a href="/logout/" class="logout-btn">Выйти</a>
-</p>
-
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/leaflet-ride-map.js' %}?v=9"></script>
 <script>
-const form = document.getElementById("orderForm");
-const submitBtn = form.querySelector("button");
-
-const orderInfo = document.getElementById("orderInfo");
-const orderIdEl = document.getElementById("orderId");
-const orderStatusEl = document.getElementById("orderStatus");
-const orderTimeEl = document.getElementById("orderTime");
-
-const statusMap = {
-    "new": "Новый",
-    "accepted": "Принят",
-    "on_way": "В пути",
-    "done": "Завершён"
-};
-
-function disableSubmit() {
-    submitBtn.disabled = true;
-    submitBtn.style.opacity = "0.5";
-    submitBtn.style.cursor = "not-allowed";
-}
-
-function enableSubmit() {
-    submitBtn.disabled = false;
-    submitBtn.style.opacity = "1";
-    submitBtn.style.cursor = "pointer";
-}
-
-["from", "to", "phone", "comment"].forEach(id => {
-    document.getElementById(id).addEventListener("input", enableSubmit);
-});
-
-form.onsubmit = async (e) => {
-    e.preventDefault();
-    disableSubmit();
-
-    const data = {
-        name: "{{ request.user.first_name }} {{ request.user.last_name }}",
-        phone: document.getElementById("phone").value,
-        from_address: document.getElementById("from").value,
-        to_address: document.getElementById("to").value,
-        comment: document.getElementById("comment").value
+document.addEventListener('DOMContentLoaded', () => {
+    const tt = (k, fb) => (window.TETATET_I18N?.[k] || fb);
+    const ttf = (k, fb, vars = {}) => {
+        let s = tt(k, fb);
+        Object.entries(vars).forEach(([name, value]) => { s = s.replace(`{${name}}`, value); });
+        return s;
     };
 
-    const response = await fetch("/api/taxi/orders/", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data)
+    localStorage.removeItem('last_order_id');
+    const HAS_PHONE = {{ has_phone|yesno:"true,false" }};
+    const USER_PHONE = "{{ user_phone|escapejs }}";
+    const PREFILL_TARIFF = "{{ prefill_tariff|escapejs }}";
+    const ETA_OFFSETS = { economy: -2, comfort: 1, business: 3, minivan: 4, cargo: 6, pets: 3, kids: 2 };
+
+    let rideMap, selectedTariff = PREFILL_TARIFF, routeData = null;
+    const fromInput = document.getElementById('from');
+    const toInput = document.getElementById('to');
+    const submitBtn = document.getElementById('submitBtn');
+    const routeBar = document.getElementById('routeBar');
+    const hasPrefillRoute = !!(fromInput.value && toInput.value);
+
+    function tariffEtaMinutes(baseMin, tariff) {
+        const off = ETA_OFFSETS[tariff] || 0;
+        return Math.max(3, baseMin + off);
+    }
+
+    function updateRouteSummary() {
+        if (!routeData) {
+            routeBar.classList.remove('visible');
+            return;
+        }
+        routeBar.classList.add('visible');
+        const eta = tariffEtaMinutes(routeData.durationMin, selectedTariff);
+        document.getElementById('routeEta').textContent = eta;
+        document.getElementById('routeDist').textContent = routeData.distanceKm.toFixed(1);
+        const name = TARIFF_LABELS[selectedTariff] || selectedTariff;
+        document.getElementById('routeTariffLabel').textContent = name;
+        document.getElementById('routePrice').textContent = formatPrice(calcPrice(routeData.distanceKm, selectedTariff));
+    }
+
+    rideMap = new LeafletRideMap('rideMap', {
+        locateOnLoad: !hasPrefillRoute,
+        onAddressUpdate(field, address) {
+            if (field === 'from') fromInput.value = address;
+            else toInput.value = address;
+        },
+        onRouteUpdate(data) {
+            routeData = data;
+            if (!data) {
+                routeBar.classList.remove('visible');
+                submitBtn.disabled = true;
+                submitBtn.textContent = tt('order_specify_route', 'Укажите маршрут');
+                return;
+            }
+
+            ALL_TARIFFS.forEach(t => {
+                const priceEl = document.getElementById('price-' + t);
+                if (priceEl) priceEl.textContent = formatPrice(calcPrice(data.distanceKm, t));
+                const etaEl = document.querySelector('.eta-slot[data-tariff="' + t + '"]');
+                if (etaEl) etaEl.textContent = tariffEtaMinutes(data.durationMin, t) + ' ' + tt('order_min_unit', 'мин');
+            });
+            updateRouteSummary();
+            updateBtn();
+        },
     });
 
-    if (response.ok) {
-        const order = await response.json();
-        localStorage.setItem("last_order_id", order.id);
-        showOrder(order);
-    } else {
-        alert("Ошибка при создании заказа");
-        enableSubmit();
+    rideMap.setClickTarget('from');
+
+    if (fromInput.value && toInput.value) {
+        setTimeout(() => rideMap.buildRoute(fromInput.value, toInput.value), 600);
+    } else if (toInput.value) {
+        rideMap.setClickTarget('to');
+        document.getElementById('fieldTo').classList.add('focused');
     }
-};
 
-function showOrder(order) {
-    orderIdEl.innerText = order.id;
-    orderStatusEl.innerText = statusMap[order.status] || order.status;
-    orderTimeEl.innerText = new Date(order.created_at).toLocaleString();
-    orderInfo.style.display = "block";
-}
+    document.getElementById('panelLocateBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        rideMap.locateUser();
+    });
 
-async function loadLastOrder() {
-    const id = localStorage.getItem("last_order_id");
-    if (!id) return;
+    fromInput.addEventListener('focus', () => {
+        rideMap.setClickTarget('from');
+        document.getElementById('fieldFrom').classList.add('focused');
+        document.getElementById('fieldTo').classList.remove('focused');
+    });
+    toInput.addEventListener('focus', () => {
+        rideMap.setClickTarget('to');
+        document.getElementById('fieldTo').classList.add('focused');
+        document.getElementById('fieldFrom').classList.remove('focused');
+    });
 
-    const response = await fetch("/api/taxi/orders/");
-    const orders = await response.json();
+    let timer;
+    const scheduleRoute = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => rideMap.buildRoute(fromInput.value, toInput.value), 900);
+    };
 
-    const order = orders.find(o => o.id == id);
-    if (order) showOrder(order);
-}
+    fromInput.addEventListener('input', () => { rideMap.clearFromMarker(); scheduleRoute(); });
+    toInput.addEventListener('input', () => { rideMap.clearToMarker(); scheduleRoute(); });
 
-loadLastOrder();
-
-let wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-let socket = new WebSocket(wsScheme + "://" + window.location.host + "/ws/orders/");
-
-socket.onmessage = function(event) {
-    try {
-        const data = JSON.parse(event.data);
-        const lastId = localStorage.getItem("last_order_id");
-
-        if (data.id == lastId) {
-            orderStatusEl.innerText = statusMap[data.status] || data.status;
+    document.getElementById('swapBtn').onclick = async () => {
+        if (rideMap.pickupPos && rideMap.dropoffPos) {
+            [fromInput.value, toInput.value] = [toInput.value, fromInput.value];
+            await rideMap.swapPoints();
+        } else {
+            [fromInput.value, toInput.value] = [toInput.value, fromInput.value];
+            scheduleRoute();
         }
-    } catch (e) {
-        console.log("WS parse error", e);
-    }
-};
-</script>
+    };
 
+    const paySelect = document.getElementById('paySelect');
+    const paySelectBtn = document.getElementById('paySelectBtn');
+    const paySelectMenu = document.getElementById('paySelectMenu');
+    const payTypeInput = document.getElementById('payTypeInput');
+    const payCardBlock = document.getElementById('payCardBlock');
+    const HAS_CARDS = {{ payment_cards|length|yesno:"true,false" }};
+
+    const PAY_LABELS = {
+        cash: { icon: '💵', text: tt('order_cash', 'Наличные') },
+        card: { icon: '💳', text: tt('order_card', 'Картой') },
+    };
+
+    function setPayType(type, closeMenu = true) {
+        payTypeInput.value = type;
+        document.getElementById('paySelectIcon').textContent = PAY_LABELS[type].icon;
+        document.getElementById('paySelectText').textContent = PAY_LABELS[type].text;
+        paySelectMenu.querySelectorAll('.pay-select-item').forEach((item) => {
+            item.classList.toggle('is-active', item.dataset.pay === type);
+        });
+        payCardBlock.hidden = type !== 'card';
+        if (closeMenu) closePayMenu();
+        updateBtn();
+    }
+
+    function openPayMenu() {
+        paySelectMenu.hidden = false;
+        paySelectBtn.setAttribute('aria-expanded', 'true');
+        paySelect.classList.add('is-open');
+    }
+
+    function closePayMenu() {
+        paySelectMenu.hidden = true;
+        paySelectBtn.setAttribute('aria-expanded', 'false');
+        paySelect.classList.remove('is-open');
+    }
+
+    paySelectBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (paySelectMenu.hidden) openPayMenu();
+        else closePayMenu();
+    });
+
+    paySelectMenu?.querySelectorAll('.pay-select-item').forEach((item) => {
+        item.addEventListener('click', () => setPayType(item.dataset.pay));
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!paySelect?.contains(e.target)) closePayMenu();
+    });
+
+    setPayType('cash', false);
+
+    document.querySelectorAll('.uber-ride').forEach(card => {
+        card.onclick = () => {
+            document.querySelectorAll('.uber-ride').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedTariff = card.dataset.tariff;
+            updateRouteSummary();
+            updateBtn();
+        };
+    });
+
+    function updateBtn() {
+        if (!routeData) return;
+        if (!HAS_PHONE) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = tt('order_need_phone', 'Добавьте телефон в профиле');
+            return;
+        }
+        const payType = payTypeInput?.value || 'cash';
+        if (payType === 'card' && !HAS_CARDS) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = tt('order_need_card', 'Добавьте карту в профиле');
+            return;
+        }
+        const name = TARIFF_LABELS[selectedTariff] || selectedTariff;
+        submitBtn.disabled = false;
+        submitBtn.textContent = ttf('order_book', 'Заказать {name} · {price}', {
+            name,
+            price: formatPrice(calcPrice(routeData.distanceKm, selectedTariff)),
+        });
+    }
+
+    submitBtn.onclick = async () => {
+        if (!routeData) return;
+        if (!HAS_PHONE) {
+            alert(tt('order_alert_phone', 'Добавьте номер телефона в профиле перед заказом.'));
+            window.location.href = '{% url "profile" %}';
+            return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = tt('order_booking', 'Оформляем...');
+        const payType = payTypeInput?.value || 'cash';
+        const body = {
+            name: '{{ request.user.first_name }} {{ request.user.last_name }}'.trim(),
+            phone: USER_PHONE,
+            from_address: fromInput.value.trim(),
+            to_address: toInput.value.trim(),
+            tariff: selectedTariff,
+            distance_km: routeData.distanceKm.toFixed(2),
+            payment_type: payType,
+        };
+        if (payType === 'card') {
+            const cardId = document.getElementById('cardSelect')?.value;
+            if (!cardId) {
+                alert(tt('order_alert_card', 'Сначала добавьте карту в профиле'));
+                setPayType('card');
+                submitBtn.disabled = false;
+                updateBtn();
+                return;
+            }
+            body.payment_card_id = parseInt(cardId, 10);
+        }
+        const res = await fetch('/api/taxi/orders/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            credentials: 'same-origin',
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            const msg = Object.values(err).flat().join(' ') || err.detail || tt('order_error', 'Ошибка заказа');
+            alert(msg);
+            submitBtn.disabled = false;
+            updateBtn();
+            return;
+        }
+        const order = await res.json();
+        window.location.href = `/orders/${order.id}/`;
+    };
+});
+</script>
 {% endblock %}

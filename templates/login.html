@@ -1,84 +1,62 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load site_i18n %}
 
-{% block title %}Вход{% endblock %}
+{% block title %}{% t "auth.login.title" %} — Tetatet{% endblock %}
+{% block body_class %}{% endblock %}
 
-{% block content %}
-<h2 style="text-align:center; margin-bottom: 25px;">Вход</h2>
+{% block layout %}
+<div class="page-auth">
+    <div class="auth-visual">
+        <div id="authMap"></div>
+        <div class="auth-visual-text">
+            <h2>{% t "auth.login.visual_title" %}</h2>
+            <p>{% t "auth.login.visual_sub" %}</p>
+        </div>
+    </div>
+    <div class="auth-form-side">
+        <div class="auth-card">
+            <h1>{% t "auth.login.title" %}</h1>
+            <p class="auth-sub">{% t "auth.login.sub" %}</p>
 
-{% if error %}
-<p class="error" style="text-align:center; margin-bottom: 15px;">{{ error }}</p>
-{% endif %}
+            {% if error %}
+            <div class="alert-error">{{ error }}</div>
+            {% endif %}
+            {% if info %}
+            <div class="alert-info">{{ info }}</div>
+            {% endif %}
 
-<form method="POST" style="display:flex; flex-direction:column; gap:15px;">
-    {% csrf_token %}
+            <form method="POST">
+                {% csrf_token %}
+                <div class="field">
+                    <label class="field-label">{% t "common.email" %}</label>
+                    <input class="field-input" name="email" type="email" placeholder="you@email.com" required>
+                </div>
+                <div class="field">
+                    <label class="field-label">{% t "common.password" %}</label>
+                    <input class="field-input" id="password" name="password" type="password" placeholder="••••••••" required>
+                </div>
+                <button type="button" class="btn btn-ghost btn-sm btn-block" onclick="togglePassword('password', this)">{% t "common.show" %}</button>
+                <button type="submit" class="btn btn-accent btn-block" style="margin-top:16px;">{% t "auth.login.submit" %}</button>
+            </form>
 
-    <input name="email" type="email" placeholder="Email" required>
+            <p class="auth-footer">
+                <a href="{% url 'forgot_password' %}">{% t "auth.login.forgot" %}</a><br><br>
+                {% t "auth.login.no_account" %} <a href="{% url 'register' %}">{% t "auth.login.register_link" %}</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-    <input id="password" name="password" type="password" placeholder="Пароль" required>
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
 
-    <button type="button" class="show-password-btn" onclick="togglePassword()">Показать пароль</button>
-
-    <button class="login-btn">Войти</button>
-</form>
-
-<p style="text-align:center; margin-top:15px;">
-    <a href="/forgot-password/">Забыли пароль?</a>
-</p>
-
-<p style="text-align:center; margin-top:10px;">
-    Нет аккаунта? <a href="/register/">Зарегистрироваться</a>
-</p>
-
-<style>
-input {
-    padding: 12px;
-    border-radius: 6px;
-    border: none;
-    font-size: 15px;
-}
-
-.show-password-btn {
-    padding: 10px;
-    background: #6c63ff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.show-password-btn:hover {
-    background: #584fe0;
-}
-
-.login-btn {
-    padding: 12px;
-    border-radius: 6px;
-    border: none;
-    background: #f1c40f;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.login-btn:hover {
-    background: #d4ac0d;
-}
-</style>
-
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/leaflet-ride-map.js' %}?v=1"></script>
 <script>
-function togglePassword() {
-    const input = document.getElementById("password");
-    const btn = document.querySelector(".show-password-btn");
-
-    if (input.type === "password") {
-        input.type = "text";
-        btn.textContent = "Скрыть пароль";
-    } else {
-        input.type = "password";
-        btn.textContent = "Показать пароль";
-    }
-}
+document.addEventListener('DOMContentLoaded', () => createSimpleMap('authMap', true));
 </script>
-
 {% endblock %}
